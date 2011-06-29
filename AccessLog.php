@@ -1,3 +1,4 @@
+<?php
 /*
 	AccessLog Version 1 (final) - 29/06/2011
 	This was originally a module for my very first CMS, which never reached
@@ -28,7 +29,6 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
 */
-<?php
 	// Firstly time to declare the main arrays
 	// Don't touch these lines unless you know what you're doing
 	$file = array();
@@ -41,7 +41,7 @@
 	// if false, entries will be in a text file
 	$richtext = true;
 	// filename (minus extension)
-	$file['name'] = 'log';
+	$file['name'] = 'logs';
 	// directory that you want your file to be in
 	// ensure there isn't a trailing /
 	$file['path'] = '.';
@@ -66,26 +66,39 @@
 	// Time, as above if you can't understand this, you shouldn't be reading this.
 	$entry['time'] = date('d-m-Y H:i:s');
 
+	// Getting file extension (I know this should be grouped with the other if statement)
+	if($richtext) {
+		$file['extension'] = '.html';
+	}
+	else
+	{
+		$file['extension'] = '.txt';
+	}
+
+	// Assembling the full filename
+	$file['name'] = $file['path'] . '/' . $file['name'] . $file['extension'];
+
 	// Just so that the logs don't have to be spammed while testing
 	if(isset($_GET['debug'])) {
 		die(print_r($entry, 1));
 	}
 	// "Rich-text"
 	elseif($richtext) {
-		$file['extension'] = '.html';
-		$entry['data'] = '<tr><td>' . $entry['time'] . '</td>\n\r<td><a href="http://www.geobytes.com/IpLocator.htm?GetLocation&IpAddress=' . $entry['IP'] . '">' .$entry['IP'] . '</td>\n\r<td>' . $entry['hostname'] . '</td>\n\r<td>' . $entry['useragent']. '</td>\n\r<td>' . $entry['uri'] . '</td>\n\r<td>' . $entry['referrer'] . '</td>\n\r</tr>\n\r';
+	//	$file['extension'] = '.html';
+		if(!file_exists($file['name'])) {
+			$entry['data'] = "<table border=\"1\"><tr> \n <th>Time</th> \n <th>IPAddress</th> \n <th>Hostname</th> \n <th>User-agent</th> \n <th>URI</th> \n <th>Referrer</th></tr> \n";
+		}
+		$entry['data'] .= '<tr><td>' . $entry['time'] . '</td>' . "\n" . '<td><a href="http://www.geobytes.com/IpLocator.htm?GetLocation&IpAddress=' . $entry['IP'] . '">' .$entry['IP'] . '</td>' . "\n" . '<td>' . $entry['hostname'] . '</td>' . "\n" . '<td>' . $entry['useragent']. '</td>' . "\n" . '<td>' . $entry['uri'] . '</td>' . "\n" . '<td>' . $entry['referrer'] . '</td>' . "\n" . '</tr>' . "\n";
 	}
 	// Plaintext
 	elseif(!$richtext) {
-		$file['extension'] = '.txt';
-		$entry['data'] = $entry['time'] . ' - ' . $entry['IP'] . ' - ' . $entry['hostname'] . ' - ' . $entry['useragent'] . ' - ' . $entry['uri'] . ' - ' . $entry['referrer'] . "\n\r";
+	//	$file['extension'] = '.txt';
+		$entry['data'] = $entry['time'] . ' - ' . $entry['IP'] . ' - ' . $entry['hostname'] . ' - ' . $entry['useragent'] . ' - ' . $entry['uri'] . ' - ' . $entry['referrer'] . "\n";
 	}
 
-	// Assembling the full filename
-	$file['name'] = $file['path'] . '/' . $file['name'] . $file['extension'];
 
 	// Writing the file
-	$file['data'] = fopen($filename,"a");
-	@fwrite($file['data'],$entry['data']);
-	@fclose($file['name']);
+	$file['data'] = fopen($file['name'],"a");
+	fwrite($file['data'],$entry['data']);
+	fclose($file['data']);
 ?>
