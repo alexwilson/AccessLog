@@ -35,28 +35,48 @@
 	$entry = array();
 
 
-	// Now, configuration.
+	// Now, configuration:
 
 	// Store entries in a rich-text format?
 	// if false, entries will be in a text file
 	$richtext = true;
+
 	// filename (minus extension)
 	$file['name'] = 'logs';
+
 	// directory that you want your file to be in
 	// ensure there isn't a trailing /
 	$file['path'] = '.';
+
+	// What shall we use for the IP locator (if none, leave blank)?
+	$IP_lookup = 'http://www.geobytes.com/IpLocator.htm?GetLocation&IpAddress='
+
 
 	// This is the part where stuff starts happening
 
 
 	// Check if server globals for IP, User-agent, referrer and URI exist, and ensures they have a valid value.
-	$headers = array('REMOTE_ADDR' => 'IP', 'HTTP_USER_AGENT' => 'useragent', 'HTTP_REFERER' => 'referrer', 'REQUEST_URI' => 'uri');
+	$headers = array(	'HTTP_USER_AGENT' => 'useragent', 
+			'HTTP_REFERER' => 'referrer', 
+			'REQUEST_URI' => 'uri',
+			'REMOTE_ADDR' => 'IP'
+			);
+	// Rudimentary reverse-proxy detection, (With order generic -> cloudflare, in case you use Varnish or similar).
+	switch($_SERVER)) {
+		case isset($_SERVER['HTTP_X_REAL_IP']) {
+			$headers['HTTP_X_REAL_IP'] = 'IP';
+		break;
+
+		case isset($_SERVER['HTTP_CF_CONNECTING_IP']) {
+			$headers['HTTP_CF_CONNECTING_IP'] = 'IP';
+		break;
+	}
+
+	// Looping through $_SERVER globals to fetch headers.
 	foreach($headers as $header => $output) {
 		if(isset($_SERVER[$header]) && ($_SERVER[$header] != "")) {
 			$entry[$output] = $_SERVER[$header];
-		}
-		else
-		{
+		} else {
 			$entry[$output] = 'N/A';
 		}
 	}
@@ -69,9 +89,7 @@
 	// Getting file extension (I know this should be grouped with the other if statement)
 	if($richtext) {
 		$file['extension'] = '.html';
-	}
-	else
-	{
+	} else {
 		$file['extension'] = '.txt';
 	}
 
@@ -88,7 +106,7 @@
 		if(!file_exists($file['name'])) {
 			$entry['data'] = "<table border=\"1\"><tr> \n <th>Time</th> \n <th>IPAddress</th> \n <th>Hostname</th> \n <th>User-agent</th> \n <th>URI</th> \n <th>Referrer</th></tr> \n";
 		}
-		$entry['data'] .= '<tr><td>' . $entry['time'] . '</td>' . "\n" . '<td><a href="http://www.geobytes.com/IpLocator.htm?GetLocation&IpAddress=' . $entry['IP'] . '">' .$entry['IP'] . '</td>' . "\n" . '<td>' . $entry['hostname'] . '</td>' . "\n" . '<td>' . $entry['useragent']. '</td>' . "\n" . '<td>' . $entry['uri'] . '</td>' . "\n" . '<td>' . $entry['referrer'] . '</td>' . "\n" . '</tr>' . "\n";
+		$entry['data'] .= '<tr><td>' . $entry['time'] . '</td>' . "\n" . '<td><a href="$IP_trace . $entry['IP'] . '">' .$entry['IP'] . '</td>' . "\n" . '<td>' . $entry['hostname'] . '</td>' . "\n" . '<td>' . $entry['useragent']. '</td>' . "\n" . '<td>' . $entry['uri'] . '</td>' . "\n" . '<td>' . $entry['referrer'] . '</td>' . "\n" . '</tr>' . "\n";
 	}
 	// Plaintext
 	elseif(!$richtext) {
