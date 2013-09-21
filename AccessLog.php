@@ -33,13 +33,10 @@
 	// Don't touch these lines unless you know what you're doing
 	$file = array();
 	$entry = array();
+	$config = array();
 
 
 	// Now, configuration:
-
-	// Store entries in a rich-text format?
-	// if false, entries will be in a text file
-	$richtext = true;
 
 	// filename (minus extension)
 	$file['name'] = 'logs';
@@ -48,26 +45,33 @@
 	// ensure there isn't a trailing /
 	$file['path'] = '.';
 
-	// What shall we use for the IP locator (if none, leave blank)?
-	$IP_lookup = 'http://www.geobytes.com/IpLocator.htm?GetLocation&IpAddress='
+	// What service shall we use for the IP locator (if none, leave blank)?
+	$config['IP_lookup_service'] = 'http://www.geobytes.com/IpLocator.htm?GetLocation&IpAddress=';
+
+	 // Format for timestamp
+        $config['timestamp'] = 'd-m-Y H:i:s';
+
+	// Store entries in a rich-text format?
+	// if false, entries will be in a text file
+	$config['richtext'] = true;
 
 
 	// This is the part where stuff starts happening
 
 
 	// Check if server globals for IP, User-agent, referrer and URI exist, and ensures they have a valid value.
-	$headers = array(	'HTTP_USER_AGENT' => 'useragent', 
+	$headers = array('HTTP_USER_AGENT' => 'useragent', 
 			'HTTP_REFERER' => 'referrer', 
 			'REQUEST_URI' => 'uri',
 			'REMOTE_ADDR' => 'IP'
 			);
 	// Rudimentary reverse-proxy detection, (With order generic -> cloudflare, in case you use Varnish or similar).
-	switch($_SERVER)) {
-		case isset($_SERVER['HTTP_X_REAL_IP']) {
+	switch($_SERVER) {
+		case isset($_SERVER['HTTP_X_REAL_IP']):
 			$headers['HTTP_X_REAL_IP'] = 'IP';
 		break;
 
-		case isset($_SERVER['HTTP_CF_CONNECTING_IP']) {
+		case isset($_SERVER['HTTP_CF_CONNECTING_IP']):
 			$headers['HTTP_CF_CONNECTING_IP'] = 'IP';
 		break;
 	}
@@ -84,10 +88,10 @@
 	// Hostname, this is self explainatory.
 	$entry['hostname'] = gethostbyaddr($entry['IP']);
 	// Time, as above if you can't understand this, you shouldn't be reading this.
-	$entry['time'] = date('d-m-Y H:i:s');
+	$entry['time'] = date($config['timestamp']);
 
 	// Getting file extension (I know this should be grouped with the other if statement)
-	if($richtext) {
+	if($config['richtext']) {
 		$file['extension'] = '.html';
 	} else {
 		$file['extension'] = '.txt';
@@ -97,26 +101,23 @@
 	$file['name'] = $file['path'] . '/' . $file['name'] . $file['extension'];
 
 	// Just so that the logs don't have to be spammed while testing
-	if(isset($_GET['debug'])) {
+	/* if(isset($_GET['debug'])) {
 		die(print_r($entry, 1));
-	}
+	} */
+	
 	// "Rich-text"
-	elseif($richtext) {
-	//	$file['extension'] = '.html';
-		if(!file_exists($file['name'])) {
-			$entry['data'] = "<table border=\"1\"><tr> \n <th>Time</th> \n <th>IPAddress</th> \n <th>Hostname</th> \n <th>User-agent</th> \n <th>URI</th> \n <th>Referrer</th></tr> \n";
-		}
-		$entry['data'] .= '<tr><td>' . $entry['time'] . '</td>' . "\n" . '<td><a href="$IP_trace . $entry['IP'] . '">' .$entry['IP'] . '</td>' . "\n" . '<td>' . $entry['hostname'] . '</td>' . "\n" . '<td>' . $entry['useragent']. '</td>' . "\n" . '<td>' . $entry['uri'] . '</td>' . "\n" . '<td>' . $entry['referrer'] . '</td>' . "\n" . '</tr>' . "\n";
+	if($config['richtext']) {
+		$entry['data'] = (!file_exists($file['name']) or filesize($file['name']) == 0) ? "<table border=\"1\">\n<tr> \n <th>Time</th> \n <th>IP Address</th> \n <th>Hostname</th> \n <th>User-agent</th> \n <th>URI</th> \n <th>Referrer</th> \n</tr> \n" : ""
+		. "<tr><td> " . $entry['time'] . " </td> \n <td><a href=\"" . $config['IP_lookup_service'] . $entry['IP'] . "\">" . $entry['IP'] . "</a></td> \n <td>" . $entry['hostname'] . "</td> \n <td>" . $entry['useragent'] . "</td> \n <td><a href=\"" . $entry['uri'] . "\">" . $entry['uri'] . "</a></td> \n <td>" . $entry['referrer'] . "</td> \n</tr> \n";
 	}
 	// Plaintext
-	elseif(!$richtext) {
-	//	$file['extension'] = '.txt';
-		$entry['data'] = $entry['time'] . ' - ' . $entry['IP'] . ' - ' . $entry['hostname'] . ' - ' . $entry['useragent'] . ' - ' . $entry['uri'] . ' - ' . $entry['referrer'] . "\n";
+	elseif(!$config['richtext']) {
+		 $entry['data'] = $entry['time'] . ' -  ' . $entry['IP'] . ' - ' . $entry['hostname'] . ' - ' . $entry['useragent'] . '  - ' . $entry['uri'] . ' - ' . $entry['referrer'] . "\n";
 	}
 
 
 	// Writing the file
-	$file['data'] = fopen($file['name'],"a");
-	fwrite($file['data'],$entry['data']);
-	fclose($file['data']);
+	$file['data'] = @fopen($file['name'], 'a');
+	@fwrite($file['data'], $entry['data']);
+	@fclose($file['data']);
 ?>
