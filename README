@@ -1,12 +1,12 @@
-AccessLog Version 1 (final) - 29/06/2011
+AccessLog Version 1.1 (final-final) - 21/09/2013
 This was originally a module for my very first CMS, which never reached
-completion. I picked it up earlier today after discovering it in an old
+the public. I picked it up earlier today after discovering it in an old
 backup. All I've done is cleaned it up a little. Intended for inclusion
 within another page, either an include(); or an <iframe>.
 
-For changelog, please see my git repo, at http://github.com/antoligy
+For changelog, please see my github repo, at http://github.com/antoligy
 
-Copyright (c) 2009-2011 Alex "Antoligy" Wilson <antoligy@antoligy.com>
+Copyright (c) 2009-2013 Alex "Antoligy" Wilson <antoligy@antoligy.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
